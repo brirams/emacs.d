@@ -1,3 +1,7 @@
+;;; init-compile.el --- Helpers for M-x compile -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
 (setq-default compilation-scroll-output t)
 
 (require-package 'alert)
@@ -29,15 +33,15 @@
     (setq sanityinc/last-compilation-buffer next-error-last-buffer))
   (advice-add 'compilation-start :after 'sanityinc/save-compilation-buffer)
 
-  (defun sanityinc/find-prev-compilation (orig &rest args)
+  (defun sanityinc/find-prev-compilation (orig &optional edit-command)
     "Find the previous compilation buffer, if present, and recompile there."
     (if (and (null edit-command)
              (not (derived-mode-p 'compilation-mode))
              sanityinc/last-compilation-buffer
              (buffer-live-p (get-buffer sanityinc/last-compilation-buffer)))
         (with-current-buffer sanityinc/last-compilation-buffer
-          (apply orig args))
-      (apply orig args)))
+          (funcall orig edit-command))
+      (funcall orig edit-command)))
   (advice-add 'recompile :around 'sanityinc/find-prev-compilation))
 
 (global-set-key [f6] 'recompile)
@@ -63,3 +67,4 @@
 
 
 (provide 'init-compile)
+;;; init-compile.el ends here

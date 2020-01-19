@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/purcell/emacs.d.png?branch=master)](https://travis-ci.org/purcell/emacs.d)
+[![Build Status](https://travis-ci.org/purcell/emacs.d.svg?branch=master)](https://travis-ci.org/purcell/emacs.d)
 <a href="https://www.patreon.com/sanityinc"><img alt="Support me" src="https://img.shields.io/badge/Support%20Me-%F0%9F%92%97-ff69b4.svg"></a>
 
 # A reasonable Emacs config
@@ -13,7 +13,7 @@ Emacs itself comes with support for many programming languages. This
 config adds improved defaults and extended support for the following, listed
 in the approximate order of how much I use them, from most to least:
 
-* Haskell / Elm
+* Haskell / Purescript / Elm
 * Ruby / Ruby on Rails
 * CSS / LESS / SASS / SCSS
 * Javascript / Typescript / Coffeescript
