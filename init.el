@@ -72,7 +72,6 @@
 (require 'init-company) ;; complete anything lib
 (require 'init-windows) ;; window mgmt
 (require 'init-sessions) ;; save windows when editing
-(require 'init-fonts)
 (require 'init-mmm) ;; multiple major modes
 
 (require 'init-editing-utils)
