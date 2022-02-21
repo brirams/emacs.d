@@ -107,7 +107,7 @@
 (require 'init-yaml)
 (require 'init-docker)
 (require 'init-terraform)
-(require 'init-nix)
+;;(require 'init-nix)
 (maybe-require-package 'nginx-mode)
 (require 'init-bazel)
 (require 'init-paredit)

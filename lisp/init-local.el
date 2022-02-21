@@ -83,4 +83,9 @@
 ;; jury's still out on whether this is a good idea
 (setq make-backup-files nil)
 
+(setq sml/no-confirm-load-theme t)
+(sml/setup)
+(powerline-default-theme)
+(color-theme-sanityinc-tomorrow-night)
+
 (provide 'init-local)
