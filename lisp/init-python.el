@@ -23,6 +23,9 @@
     (add-hook 'python-mode-hook
               (lambda () (unless (file-remote-p default-directory)
                            (anaconda-mode 1))))
+    (add-hook 'python-mode-hook
+              (lambda () (local-set-key (kbd "M-*") 'xref-go-back)))
+
     (add-hook 'anaconda-mode-hook
               (lambda ()
                 (anaconda-eldoc-mode (if anaconda-mode 1 0)))))

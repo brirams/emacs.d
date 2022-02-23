@@ -42,7 +42,7 @@
       (sanityinc/no-consult-preview sanityinc/affe-grep-at-point)
       (with-eval-after-load 'affe (sanityinc/no-consult-preview affe-grep)))
 
-    (global-set-key [remap switch-to-buffer] 'consult-buffer)
+  ;;  (global-set-key [remap switch-to-buffer] 'consult-buffer)
     (global-set-key [remap switch-to-buffer-other-window] 'consult-buffer-other-window)
     (global-set-key [remap switch-to-buffer-other-frame] 'consult-buffer-other-frame)
     (global-set-key [remap goto-line] 'consult-goto-line)
