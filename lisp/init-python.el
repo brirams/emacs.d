@@ -15,7 +15,12 @@
 (setq python-shell-interpreter "python3")
 
 (require-package 'pip-requirements)
+(require-package 'python-pytest)
 
+;; need to install pyright(brew install)
+;; need to run treesit-install-language-grammer
+;; need to create a venv locally
+;; need to run M-x eglot and that should figure out your bindings
 (when (maybe-require-package 'flymake-ruff)
   (defun sanityinc/flymake-ruff-maybe-enable ()
     (when (executable-find "ruff")

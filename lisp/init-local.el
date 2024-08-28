@@ -41,5 +41,6 @@
 (doom-themes-visual-bell-config)
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
+
 (provide 'init-local)
 ;;; init-local.el ends here
