@@ -16,6 +16,7 @@
 
 (require-package 'pip-requirements)
 (require-package 'python-pytest)
+(setq python-shell-completion-native-enable nil)
 
 ;; need to install pyright(brew install)
 ;; need to run treesit-install-language-grammer

@@ -42,5 +42,15 @@
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
 
+(defun ask-before-closing ()
+  "Useful to be used in emacsclient to avoid accident exit of Emacs like 'Save desktop?'.
+This is tested in terminal Emacs!"
+  (interactive)
+  (if (y-or-n-p (format "You sure, bruh? "))
+      (message "Canceled frame close!")
+    (save-buffers-kill-terminal)))
+
+(when (daemonp)
+  (global-set-key (kbd "C-x C-c") 'ask-before-closing))
 (provide 'init-local)
 ;;; init-local.el ends here

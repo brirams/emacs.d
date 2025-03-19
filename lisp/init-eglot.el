@@ -5,7 +5,8 @@
 ;;; Code:
 
 (when (maybe-require-package 'eglot)
-  (maybe-require-package 'consult-eglot))
+  (maybe-require-package 'consult-eglot)
+  (setq eglot-report-progress nil))
 
 
 
