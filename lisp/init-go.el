@@ -16,4 +16,8 @@
 ;;   (define-key go-mode-map (kbd "M-.") 'godef-jump)
 ;;   (define-key go-mode-map (kbd "M-*") 'pop-tag-mark))
 
+(add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
+
 (provide 'init-go)
+
+;;; init-go ends here
