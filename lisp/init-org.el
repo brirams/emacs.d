@@ -102,7 +102,8 @@ typical word processor."
       (writeroom-mode 0))))
 
 ;;(add-hook 'org-mode-hook 'buffer-face-mode)
-
+(add-hook 'org-mode-hook (lambda ()
+                           (auto-fill-mode 1)))
 
 (setq org-support-shift-select t)
 
@@ -119,6 +120,8 @@ typical word processor."
 
 
 
+(setq org-default-notes-file (expand-file-name "~/data/notes/inbox.org"))
+
 ;;; Refiling
 
 (setq org-refile-use-cache nil)
