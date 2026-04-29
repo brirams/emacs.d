@@ -102,7 +102,11 @@ typical word processor."
       (writeroom-mode 0))))
 
 ;;(add-hook 'org-mode-hook 'buffer-face-mode)
+(when (maybe-require-package 'org-modern)
+  (add-hook 'org-mode-hook 'org-modern-mode))
+
 (add-hook 'org-mode-hook (lambda ()
+                           (setq fill-column 100)
                            (auto-fill-mode 1)))
 
 (setq org-support-shift-select t)
@@ -405,6 +409,32 @@ typical word processor."
       (sql . t)
       (sqlite . t)))))
 
+
+;;; Org-roam
+
+(when (maybe-require-package 'org-roam)
+  (setq org-roam-directory (file-truename (expand-file-name "~/data/notes/roam/")))
+  (setq org-roam-dailies-directory "daily/")
+
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?"
+           :target (file+head "${slug}.org"
+                              "#+TITLE: ${title}\n#+ROAM_TAGS:\n\n")
+           :unnarrowed t)))
+
+  (setq org-roam-dailies-capture-templates
+        '(("d" "daily" entry "* %?"
+           :target (file+head "%<%Y-%m-%d>.org"
+                              "#+TITLE: %<%Y-%m-%d>\n#+CATEGORY: Daily\n\n* Morning\n\n* Notes\n\n* EOD\n")
+           :unnarrowed t)))
+
+  (org-roam-db-autosync-mode)
+
+  (define-key global-map (kbd "C-c n f") 'org-roam-node-find)
+  (define-key global-map (kbd "C-c n i") 'org-roam-node-insert)
+  (define-key global-map (kbd "C-c n d") 'org-roam-dailies-goto-today)
+  (define-key global-map (kbd "C-c n D") 'org-roam-dailies-goto-date)
+  (define-key global-map (kbd "C-c n b") 'org-roam-buffer-toggle))
 
 (provide 'init-org)
 ;;; init-org.el ends here
