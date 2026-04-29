@@ -111,6 +111,11 @@ typical word processor."
 
 (global-set-key (kbd "C-c c") 'org-capture)
 
+(setq org-default-notes-file (expand-file-name "~/data/notes/gtd/inbox.org"))
+(setq org-agenda-files (directory-files-recursively
+                        (file-truename (expand-file-name "~/data/notes/gtd/"))
+                        "\\.org$"))
+
 (setq org-capture-templates
       `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
          "* NEXT %?\n%U\n" :clock-resume t)
@@ -120,8 +125,6 @@ typical word processor."
 
 
 
-(setq org-default-notes-file (expand-file-name "~/data/notes/inbox.org"))
-
 ;;; Refiling
 
 (setq org-refile-use-cache nil)
@@ -355,6 +358,21 @@ typical word processor."
 ;;                   (re-search-backward "^[0-9]+:[0-9]+-[0-9]+:[0-9]+ " nil t))
 ;;                 (insert (match-string 0))))))
 
+
+(defun bramos/org-region-to-markdown ()
+  "Convert selected org region to markdown and copy to clipboard."
+  (interactive)
+  (unless (region-active-p)
+    (user-error "No region selected"))
+  (let* ((org-text (buffer-substring-no-properties (region-beginning) (region-end)))
+         (md-text (with-temp-buffer
+                    (insert org-text)
+                    (shell-command-on-region (point-min) (point-max)
+                                             "pandoc -f org -t markdown"
+                                             t t)
+                    (buffer-string))))
+    (kill-new md-text)
+    (message "Markdown copied to clipboard")))
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-M-<up>") 'org-up-element)

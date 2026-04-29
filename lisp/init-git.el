@@ -42,7 +42,8 @@
 
 (maybe-require-package 'magit-todos)
 
-(when (maybe-require-package 'git-commit)
+;; git-commit is bundled with magit, not a separate package
+(with-eval-after-load 'magit
   (add-hook 'git-commit-mode-hook 'goto-address-mode))
 
 
