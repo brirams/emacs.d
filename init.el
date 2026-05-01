@@ -122,6 +122,7 @@
 (require 'init-docker)
 (require 'init-terraform)
 (require 'init-nix)
+(require 'init-graphql)
 (maybe-require-package 'nginx-mode)
 (maybe-require-package 'just-mode)
 (maybe-require-package 'justl)
