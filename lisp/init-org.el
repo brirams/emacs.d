@@ -210,11 +210,6 @@ typical word processor."
             (tags "INBOX"
                   ((org-agenda-overriding-header "Inbox")
                    (org-tags-match-list-sublevels nil)))
-            (stuck ""
-                   ((org-agenda-overriding-header "Stuck Projects")
-                    (org-agenda-tags-todo-honor-ignore-options t)
-                    (org-tags-match-list-sublevels t)
-                    (org-agenda-todo-ignore-scheduled 'future)))
             (tags-todo "-INBOX"
                        ((org-agenda-overriding-header "Next Actions")
                         (org-agenda-tags-todo-honor-ignore-options t)
@@ -226,6 +221,11 @@ typical word processor."
                         (org-tags-match-list-sublevels t)
                         (org-agenda-sorting-strategy
                          '(todo-state-down effort-up category-keep))))
+            (stuck ""
+                   ((org-agenda-overriding-header "Stuck Projects")
+                    (org-agenda-tags-todo-honor-ignore-options t)
+                    (org-tags-match-list-sublevels t)
+                    (org-agenda-todo-ignore-scheduled 'future)))
             (tags-todo ,active-project-match
                        ((org-agenda-overriding-header "Projects")
                         (org-tags-match-list-sublevels t)
