@@ -109,6 +109,20 @@ typical word processor."
                            (setq fill-column 100)
                            (auto-fill-mode 1)))
 
+;; Org's default completion offers dictionary spellings via
+;; `ispell-completion-at-point', whose suggestions are noisy and rarely
+;; relevant.  Prefer completing words already present in open buffers and
+;; drop the ispell source.  Use `cape-dabbrev' rather than the built-in
+;; `dabbrev-capf': the latter can return nil candidates that crash Corfu's
+;; auto-completion timer ("wrong type argument stringp nil").
+(when (maybe-require-package 'cape)
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (setq-local completion-at-point-functions
+                          (cons #'cape-dabbrev
+                                (remq #'ispell-completion-at-point
+                                      completion-at-point-functions))))))
+
 (setq org-support-shift-select t)
 
 ;;; Capturing
