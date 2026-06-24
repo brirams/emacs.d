@@ -42,6 +42,19 @@
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
 
+;; Brighten comments: doom-tomorrow-night's default comment colour is too dim
+;; against the dark background. Override via the high-priority `user' theme so
+;; it wins over whatever theme is active, and reattach it after theme reloads
+;; (the `dark'/`light' toggles call `reapply-themes', which would otherwise
+;; clobber it). Tune the foreground brighter toward "#9aa3b5" for more pop.
+(defun my/brighten-comments ()
+  "Raise the contrast of comment faces against the dark background."
+  (custom-set-faces
+   '(font-lock-comment-face ((t (:foreground "#8a92a3"))))
+   '(font-lock-comment-delimiter-face ((t (:foreground "#8a92a3"))))))
+(my/brighten-comments)
+(advice-add 'reapply-themes :after #'my/brighten-comments)
+
 (defun ask-before-closing ()
   "Useful to be used in emacsclient to avoid accident exit of Emacs like 'Save desktop?'.
 This is tested in terminal Emacs!"
