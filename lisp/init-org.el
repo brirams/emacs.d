@@ -171,9 +171,10 @@ typical word processor."
   (let ((org-refile-target-verify-function))
     (org-agenda-refile goto rfloc no-update)))
 
-;; Targets start with the file name - allows creating level 1 tasks
-;;(setq org-refile-use-outline-path (quote file))
-(setq org-refile-use-outline-path t)
+;; Targets start with the file name - allows creating level 1 tasks, and keeps
+;; same-named headings in different files (required-reading, nice-to-read,
+;; Archive) distinguishable in the completion list.
+(setq org-refile-use-outline-path 'file)
 (setq org-outline-path-complete-in-steps nil)
 
 ;; Allow refile to create parent tasks with confirmation
@@ -197,6 +198,145 @@ typical word processor."
 ;;; Agenda views
 
 (setq-default org-agenda-clockreport-parameter-plist '(:link t :maxlevel 3))
+
+(defvar bramos/org-agenda-gutter-width 16
+  "Width of the leading gutter shared by agenda blocks.
+Sized to the longest value displayed there.  Widen this when a longer
+category or file tag is added, or the column will break silently.")
+
+(defun bramos/org-agenda-gutter-prefix (spec)
+  "Return an `org-agenda-prefix-format' alist for a gutter filled by SPEC.
+SPEC is a prefix-format letter: \"c\" for the category, \"T\" for the last
+tag.  Prefer \"c\": the last tag is displaced by any local tag on the entry.
+Pair with `bramos/org-agenda-strip-keyword-and-tags' so the keyword and the
+trailing tags do not repeat what the gutter already says."
+  (let ((fmt (format "  %%-%d%s │ " bramos/org-agenda-gutter-width spec)))
+    `((agenda . ,fmt) (todo . ,fmt) (tags . ,fmt) (search . ,fmt))))
+
+(defvar bramos/org-agenda-context-property 'bramos-agenda-context
+  "Text property marking the context suffix appended to agenda lines.
+`bramos/org-agenda-align-context' searches for it to find what to align.
+A property rather than a regexp, because the suffix embeds arbitrary
+project titles and so cannot be matched reliably.")
+
+(defvar bramos/org-agenda-context-max-width 34
+  "Maximum display width of the CATEGORY/PROJECT context suffix.
+Bounding it leaves enough of each line free that the right-aligned suffix
+reads as a column instead of collapsing to the one-space fallback.  Set to
+nil to never truncate.")
+
+(defun bramos/org-nearest-project-title ()
+  "Return the title of the nearest ancestor heading in the PROJECT state.
+Returns nil when the entry has no PROJECT ancestor.  Point must already be
+on the entry in its own Org buffer."
+  (save-excursion
+    (let (title)
+      (while (and (not title) (org-up-heading-safe))
+        (when (equal (org-get-todo-state) "PROJECT")
+          (setq title (org-get-heading t t t t))))
+      title)))
+
+(defun bramos/org-agenda-context-string ()
+  "Return \"CATEGORY/PROJECT\" for the entry at point.
+Falls back to the bare category when the entry has no PROJECT ancestor, and
+truncates to `bramos/org-agenda-context-max-width'."
+  (let* ((category (org-get-category))
+         (project (bramos/org-nearest-project-title))
+         (context (if project (concat category "/" project) category)))
+    (if bramos/org-agenda-context-max-width
+        (truncate-string-to-width
+         context bramos/org-agenda-context-max-width nil nil t)
+      context)))
+
+(defun bramos/org-agenda-strip-keyword-and-tags (line)
+  "Return agenda LINE with its TODO keyword and trailing tag group removed.
+Both are redundant in a block that selects a single keyword and already
+shows the file tag in the prefix.  Suitable on its own as an
+`org-agenda-before-sorting-filter-function'.  The keyword is matched at a
+symbol boundary rather than anchored to the start of the string, so this
+works whether or not `org-agenda-prefix-format' placed a gutter ahead of
+it.  Only `substring' is used, so the text properties the agenda relies on
+for navigation survive intact."
+  (let ((marker (or (get-text-property 0 'org-hd-marker line)
+                    (get-text-property 0 'org-marker line))))
+    (if (not marker)
+        line
+      (let ((task line)
+            (keyword (org-with-point-at marker (org-get-todo-state)))
+            (case-fold-search nil))
+        (when (string-match org-tag-group-re task)
+          (setq task (substring task 0 (match-beginning 0))))
+        (when (and keyword
+                   (string-match (concat "\\_<" (regexp-quote keyword) " ") task))
+          (setq task (concat (substring task 0 (match-beginning 0))
+                             (substring task (match-end 0)))))
+        task))))
+
+(defun bramos/org-agenda-task-then-context (line)
+  "Rewrite agenda LINE as \"TASK  CATEGORY/PROJECT\".
+An alternative to using `bramos/org-agenda-strip-keyword-and-tags' alone:
+appends the context, marked with `bramos/org-agenda-context-property' so
+`bramos/org-agenda-align-context' can right-align it.
+
+Unused by default; the blocks lead with a category gutter instead.  To put a
+block back on this layout: give it an empty `org-agenda-prefix-format' so the
+task text leads the line, set this as its
+`org-agenda-before-sorting-filter-function', and hook
+`bramos/org-agenda-align-context' onto `org-agenda-finalize-hook' plus the
+buffer-local `window-configuration-change-hook' beside
+`org-agenda-align-tags' so the column survives a resize."
+  (let ((marker (or (get-text-property 0 'org-hd-marker line)
+                    (get-text-property 0 'org-marker line))))
+    (if (not marker)
+        line
+      (concat (bramos/org-agenda-strip-keyword-and-tags line) " "
+              (propertize (org-with-point-at marker
+                           (bramos/org-agenda-context-string))
+                          bramos/org-agenda-context-property t
+                          'face 'org-tag)))))
+
+(defun bramos/org-agenda-align-context (&optional line)
+  "Right-align context suffixes to `org-agenda-tags-column'.
+Modelled on `org-agenda-align-tags'.  With LINE non-nil, align only the
+current line.  Idempotent: whitespace already preceding a suffix is removed
+before fresh padding is inserted, so repeated runs are a fixed point.
+
+Deliberately not hooked anywhere: no block currently produces the suffix it
+aligns, so it would scan for nothing on every agenda build.  See
+`bramos/org-agenda-task-then-context' for how to switch a block over."
+  (let ((inhibit-read-only t)
+        (column (if (eq 'auto org-agenda-tags-column)
+                    (- (window-max-chars-per-line))
+                  org-agenda-tags-column))
+        (end (and line (line-end-position))))
+    (save-excursion
+      (goto-char (if line (line-beginning-position) (point-min)))
+      (while (let ((match (text-property-search-forward
+                           bramos/org-agenda-context-property t t)))
+               (when (and match
+                          (or (null end) (<= (prop-match-beginning match) end)))
+                 (let* ((start (prop-match-beginning match))
+                        (width (string-width
+                                (buffer-substring start (prop-match-end match))))
+                        (target (if (< column 0) (- (abs column) width) column)))
+                   (goto-char start)
+                   (delete-region
+                    (save-excursion (skip-chars-backward " \t") (point)) (point))
+                   (insert (make-string (max 1 (- target (current-column))) ?\s))
+                   (goto-char (line-end-position))
+                   t)))))))
+
+(defun bramos/org-agenda-format-date-aligned (date)
+  "Format DATE for the agenda without the ISO week number.
+Identical to `org-agenda-format-date-aligned', including its alignment, but
+omitting the \" W%02d\" that upstream appends on Mondays."
+  (let ((dayname (calendar-day-name date))
+        (day (cadr date))
+        (monthname (calendar-month-name (car date)))
+        (year (nth 2 date)))
+    (format "%-10s %2d %s %4d" dayname day monthname year)))
+
+(setq org-agenda-format-date 'bramos/org-agenda-format-date-aligned)
 
 
 (let ((active-project-match "-INBOX/PROJECT"))
@@ -228,6 +368,15 @@ typical word processor."
                        ((org-agenda-overriding-header "Next Actions")
                         (org-agenda-tags-todo-honor-ignore-options t)
                         (org-agenda-todo-ignore-scheduled 'future)
+                        ;; Category gutter, a rule, then the task text
+                        ;; left-justified in a fixed column.  For the
+                        ;; right-aligned CATEGORY/PROJECT layout instead, use an
+                        ;; empty prefix with
+                        ;; `bramos/org-agenda-task-then-context' as the filter.
+                        (org-agenda-prefix-format
+                         (bramos/org-agenda-gutter-prefix "c"))
+                        (org-agenda-before-sorting-filter-function
+                         'bramos/org-agenda-strip-keyword-and-tags)
                         (org-agenda-skip-function
                          '(lambda ()
                             (or (org-agenda-skip-subtree-if 'todo '("HOLD" "WAITING"))
@@ -235,24 +384,14 @@ typical word processor."
                         (org-tags-match-list-sublevels t)
                         (org-agenda-sorting-strategy
                          '(todo-state-down effort-up category-keep))))
-            (stuck ""
-                   ((org-agenda-overriding-header "Stuck Projects")
-                    (org-agenda-tags-todo-honor-ignore-options t)
-                    (org-tags-match-list-sublevels t)
-                    (org-agenda-todo-ignore-scheduled 'future)))
-            (tags-todo ,active-project-match
-                       ((org-agenda-overriding-header "Projects")
-                        (org-tags-match-list-sublevels t)
-                        (org-agenda-sorting-strategy
-                         '(category-keep))))
             (tags-todo "-INBOX/-NEXT"
-                       ((org-agenda-overriding-header "Orphaned Tasks")
+                       ((org-agenda-overriding-header "Loose Tasks")
                         (org-agenda-tags-todo-honor-ignore-options t)
                         (org-agenda-todo-ignore-scheduled 'future)
                         (org-agenda-skip-function
                          '(lambda ()
                             (or (org-agenda-skip-subtree-if 'todo '("PROJECT" "HOLD" "WAITING" "DELEGATED"))
-                                (org-agenda-skip-subtree-if 'nottododo '("TODO")))))
+                                (org-agenda-skip-subtree-if 'nottodo '("TODO")))))
                         (org-tags-match-list-sublevels t)
                         (org-agenda-sorting-strategy
                          '(category-keep))))
@@ -280,7 +419,36 @@ typical word processor."
             ;; (tags-todo "-NEXT"
             ;;            ((org-agenda-overriding-header "All other TODOs")
             ;;             (org-match-list-sublevels t)))
-            )))))
+            ))
+          ;; Mirrors the weekly review checklist in ~/data/notes/README.org.
+          ;; Stuck projects live here rather than in "g": a project without a
+          ;; NEXT is a review-time problem, and in the daily view the block
+          ;; duplicated "Projects" whenever project hygiene had lapsed.
+          ("w" "Weekly review"
+           ((tags "INBOX"
+                  ((org-agenda-overriding-header "1. Inbox (refile or delete every item)")
+                   (org-tags-match-list-sublevels nil)))
+            (stuck ""
+                   ((org-agenda-overriding-header "2. Stuck projects (give each a NEXT, or mark HOLD/CANCELLED)")
+                    (org-tags-match-list-sublevels t)))
+            (tags-todo ,active-project-match
+                       ((org-agenda-overriding-header "2b. All active projects")
+                        (org-agenda-prefix-format
+                         (bramos/org-agenda-gutter-prefix "c"))
+                        (org-agenda-before-sorting-filter-function
+                         'bramos/org-agenda-strip-keyword-and-tags)
+                        (org-tags-match-list-sublevels t)
+                        (org-agenda-sorting-strategy
+                         '(category-keep))))
+            (tags-todo "/WAITING"
+                       ((org-agenda-overriding-header "3. Waiting (anything to chase?)")
+                        (org-agenda-sorting-strategy
+                         '(category-keep))))
+            (tags-todo "/DELEGATED"
+                       ((org-agenda-overriding-header "3b. Delegated (anything to chase?)")
+                        (org-agenda-sorting-strategy
+                         '(category-keep))))))
+          )))
 
 
 (add-hook 'org-agenda-mode-hook 'hl-line-mode)
