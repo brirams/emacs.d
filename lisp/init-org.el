@@ -204,13 +204,33 @@ typical word processor."
 Sized to the longest value displayed there.  Widen this when a longer
 category or file tag is added, or the column will break silently.")
 
+(defvar bramos/org-agenda-gutter-separator "│"
+  "Glyph drawn between the agenda gutter and the task text.
+Defined once because `bramos/org-agenda-gutter-prefix' emits it and
+`bramos/org-agenda-style-gutter' locates it to decide what to fontify.")
+
+(defface bramos/org-agenda-gutter-label
+  '((t :inherit font-lock-string-face))
+  "Face for the category label in the agenda gutter.
+Inherits the face `org-todo-keyword-faces' gives PROJECT, so the gutter
+matches how project headings already read, and tracks theme changes rather
+than pinning a colour.")
+
+(defface bramos/org-agenda-gutter-rule
+  '((t :inherit org-tag))
+  "Face for the rule between the agenda gutter and the task text.
+Inherits `org-tag', which this theme renders in a muted grey, so the rule
+reads as a drawn column rather than a character.")
+
 (defun bramos/org-agenda-gutter-prefix (spec)
   "Return an `org-agenda-prefix-format' alist for a gutter filled by SPEC.
 SPEC is a prefix-format letter: \"c\" for the category, \"T\" for the last
 tag.  Prefer \"c\": the last tag is displaced by any local tag on the entry.
-Pair with `bramos/org-agenda-strip-keyword-and-tags' so the keyword and the
-trailing tags do not repeat what the gutter already says."
-  (let ((fmt (format "  %%-%d%s │ " bramos/org-agenda-gutter-width spec)))
+Pair with `bramos/org-agenda-gutter-line' so the keyword and trailing tags
+do not repeat what the gutter already says, and so the gutter gets faced."
+  (let ((fmt (format "  %%-%d%s %s "
+                     bramos/org-agenda-gutter-width spec
+                     bramos/org-agenda-gutter-separator)))
     `((agenda . ,fmt) (todo . ,fmt) (tags . ,fmt) (search . ,fmt))))
 
 (defvar bramos/org-agenda-context-property 'bramos-agenda-context
@@ -271,6 +291,28 @@ for navigation survive intact."
           (setq task (concat (substring task 0 (match-beginning 0))
                              (substring task (match-end 0)))))
         task))))
+
+(defun bramos/org-agenda-style-gutter (line)
+  "Fontify the gutter of agenda LINE up to and including the rule glyph.
+Must run after `org-scan-tags' has applied its property list, which sets
+`face' to `default' across the whole line (see `org.el') and so flattens any
+face applied while the prefix was being formatted.  `add-face-text-property'
+is used rather than `propertize' so the gutter faces merge ahead of that
+`default' instead of replacing it.  The region is found by locating
+`bramos/org-agenda-gutter-separator' rather than by offset, since stripping
+the keyword shifts the line and the gutter width is configurable."
+  (let ((rule (string-search bramos/org-agenda-gutter-separator line)))
+    (when rule
+      (add-face-text-property 0 rule 'bramos/org-agenda-gutter-label nil line)
+      (add-face-text-property rule (1+ rule)
+                              'bramos/org-agenda-gutter-rule nil line)))
+  line)
+
+(defun bramos/org-agenda-gutter-line (line)
+  "Strip the TODO keyword and tags from agenda LINE, then fontify its gutter.
+The `org-agenda-before-sorting-filter-function' for gutter blocks."
+  (bramos/org-agenda-style-gutter
+   (bramos/org-agenda-strip-keyword-and-tags line)))
 
 (defun bramos/org-agenda-task-then-context (line)
   "Rewrite agenda LINE as \"TASK  CATEGORY/PROJECT\".
@@ -376,7 +418,7 @@ omitting the \" W%02d\" that upstream appends on Mondays."
                         (org-agenda-prefix-format
                          (bramos/org-agenda-gutter-prefix "c"))
                         (org-agenda-before-sorting-filter-function
-                         'bramos/org-agenda-strip-keyword-and-tags)
+                         'bramos/org-agenda-gutter-line)
                         (org-agenda-skip-function
                          '(lambda ()
                             (or (org-agenda-skip-subtree-if 'todo '("HOLD" "WAITING"))
@@ -436,7 +478,7 @@ omitting the \" W%02d\" that upstream appends on Mondays."
                         (org-agenda-prefix-format
                          (bramos/org-agenda-gutter-prefix "c"))
                         (org-agenda-before-sorting-filter-function
-                         'bramos/org-agenda-strip-keyword-and-tags)
+                         'bramos/org-agenda-gutter-line)
                         (org-tags-match-list-sublevels t)
                         (org-agenda-sorting-strategy
                          '(category-keep))))
