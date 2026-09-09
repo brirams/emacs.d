@@ -20,7 +20,7 @@
      consult-ripgrep
      consult-git-grep consult-grep
      consult-bookmark consult-recent-file consult-xref
-     consult--source-recent-file consult--source-project-recent-file consult--source-bookmark)
+     consult-source-recent-file consult-source-project-recent-file consult-source-bookmark)
 
     (when (and (executable-find "rg"))
       (defun sanityinc/consult-ripgrep-at-point (&optional dir initial)
@@ -30,7 +30,7 @@
       (sanityinc/no-consult-preview sanityinc/consult-ripgrep-at-point)
       (global-set-key (kbd "M-?") 'sanityinc/consult-ripgrep-at-point))
 
-  ;;  (global-set-key [remap switch-to-buffer] 'consult-buffer)
+    ;;  (global-set-key [remap switch-to-buffer] 'consult-buffer)
     (global-set-key [remap switch-to-buffer-other-window] 'consult-buffer-other-window)
     (global-set-key [remap switch-to-buffer-other-frame] 'consult-buffer-other-frame)
     (global-set-key [remap goto-line] 'consult-goto-line)

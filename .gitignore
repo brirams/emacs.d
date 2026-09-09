@@ -60,3 +60,4 @@ site-lisp/package/
 /projectile.cache
 /org-roam.db
 /multisession
+/recentf.eld
