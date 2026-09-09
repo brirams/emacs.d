@@ -26,8 +26,10 @@
   (with-eval-after-load 'corfu
     (corfu-popupinfo-mode))
 
-  ;; Make Corfu also work in terminals, without disturbing usual behaviour in GUI
-  (when (maybe-require-package 'corfu-terminal)
+  ;; Make Corfu also work in terminals, without disturbing usual behaviour in GUI.
+  ;; Emacs 31 does this natively and corfu-terminal warns that it is not needed.
+  (when (and (< emacs-major-version 31)
+             (maybe-require-package 'corfu-terminal))
     (with-eval-after-load 'corfu
       (corfu-terminal-mode)))
 
