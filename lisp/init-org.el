@@ -129,8 +129,36 @@ typical word processor."
 
 (global-set-key (kbd "C-c c") 'org-capture)
 
-(setq org-default-notes-file (expand-file-name "~/data/notes/gtd/inbox.org"))
-(setq org-agenda-files (list (expand-file-name "~/data/notes/gtd/")))
+;; My notes tree lives in ~/data/notes, which is only synced on the machines
+;; where I keep it.  Everywhere else, fall back to a gitignored notes/ tree
+;; inside this repo, so org still loads and captures still land somewhere
+;; instead of pointing at a path that does not exist.
+(defun bramos/notes-directory (subdir)
+  "Return the directory to use for SUBDIR of my notes tree.
+Prefers ~/data/notes/SUBDIR when that directory already exists, so machines
+carrying the synced tree are left alone.  Otherwise returns notes/SUBDIR
+inside `user-emacs-directory', creating it first."
+  (let ((preferred (expand-file-name (format "~/data/notes/%s/" subdir))))
+    (if (file-directory-p preferred)
+        preferred
+      (let ((fallback (file-name-as-directory
+                       (locate-user-emacs-file (format "notes/%s" subdir)))))
+        (make-directory fallback t)
+        fallback))))
+
+(defvar bramos/gtd-directory (bramos/notes-directory "gtd")
+  "Directory holding the GTD org files that feed `org-agenda-files'.")
+
+(setq org-default-notes-file (expand-file-name "inbox.org" bramos/gtd-directory))
+(setq org-agenda-files (list bramos/gtd-directory))
+
+;; Seed a usable inbox when there is not one yet.  The FILETAGS line is
+;; load-bearing rather than decoration: the agenda's "Inbox" block selects on
+;; that tag and the Next Actions block excludes it.  Never touches an existing
+;; file.
+(unless (file-exists-p org-default-notes-file)
+  (with-temp-file org-default-notes-file
+    (insert "#+TITLE: Inbox\n#+CATEGORY: Inbox\n#+FILETAGS: INBOX\n\n")))
 
 (setq org-capture-templates
       `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
@@ -635,8 +663,13 @@ omitting the \" W%02d\" that upstream appends on Mondays."
 ;;; Org-roam
 
 (when (maybe-require-package 'org-roam)
-  (setq org-roam-directory (file-truename (expand-file-name "~/data/notes/roam/")))
+  (setq org-roam-directory (file-truename (bramos/notes-directory "roam")))
   (setq org-roam-dailies-directory "daily/")
+
+  ;; org-roam never creates this itself, and `org-roam-dailies--list-files'
+  ;; calls `directory-files-recursively' on it, which signals file-missing when
+  ;; it is absent.  Same failure shape as a missing GTD directory.
+  (make-directory (expand-file-name org-roam-dailies-directory org-roam-directory) t)
 
   (setq org-roam-capture-templates
         '(("d" "default" plain "%?"
