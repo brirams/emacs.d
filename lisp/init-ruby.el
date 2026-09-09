@@ -67,7 +67,9 @@
 
 
 
-(require-package 'bundler)
+;; bundler has been dropped from GNU ELPA, NonGNU ELPA and MELPA, so a hard
+;; require-package aborts the rest of init.  Soft-fail instead.
+(maybe-require-package 'bundler)
 
 
 (when (maybe-require-package 'yard-mode)
