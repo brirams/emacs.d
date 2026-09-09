@@ -1,3 +1,4 @@
+;;; init-go.el --- Go development setup  -*- lexical-binding: t; -*-
 ;; Things you're going to need:
 ;; go get github.com/rogpeppe/godef
 ;; go get -u github.com/golang/lint/golint

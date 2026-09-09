@@ -1,3 +1,4 @@
+;;; init-local.el --- Machine-local overrides  -*- lexical-binding: t; -*-
 ;; copy shit into osx clipboard
 ;; TODO: maybe we should only do this for macosx(yes -- we should)
 (defun copy-from-osx ()
