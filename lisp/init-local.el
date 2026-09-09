@@ -10,8 +10,13 @@
       (process-send-string proc text)
       (process-send-eof proc))))
 
-(setq interprogram-cut-function 'paste-to-osx)
-(setq interprogram-paste-function 'copy-from-osx)
+;; Only hijack the clipboard when both helpers exist.  Some Linux hosts ship a
+;; pbcopy shim without a matching pbpaste, which is the worse of the two
+;; failures: the cut direction appears to work, while the paste direction hands
+;; Emacs the shell's "command not found" text on every yank.
+(when (and (executable-find "pbcopy") (executable-find "pbpaste"))
+  (setq interprogram-cut-function 'paste-to-osx)
+  (setq interprogram-paste-function 'copy-from-osx))
 
 (global-set-key (kbd "M-j") 'windmove-left)
 (global-set-key (kbd "M-k") 'windmove-right)
