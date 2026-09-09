@@ -61,3 +61,4 @@ site-lisp/package/
 /org-roam.db
 /multisession
 /recentf.eld
+/projectile-frecency.eld
