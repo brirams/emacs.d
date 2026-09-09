@@ -130,7 +130,7 @@ typical word processor."
 (global-set-key (kbd "C-c c") 'org-capture)
 
 (setq org-default-notes-file (expand-file-name "~/data/notes/gtd/inbox.org"))
-(setq org-agenda-files (directory-files (expand-file-name "~/data/notes/gtd/") t "\\.org$"))
+(setq org-agenda-files (list (expand-file-name "~/data/notes/gtd/")))
 
 (setq org-capture-templates
       `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
