@@ -6,7 +6,7 @@
 
 
 (defun sanityinc/maybe-map-paredit-newline ()
-  (unless (or (derived-mode-p 'inferior-emacs-lisp-mode 'cider-repl-mode)
+  (unless (or (derived-mode-p 'inferior-emacs-lisp-mode)
               (minibufferp))
     (local-set-key (kbd "RET") 'paredit-newline)))
 

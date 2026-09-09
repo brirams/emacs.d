@@ -65,7 +65,6 @@ Return a list of languages seen along the way."
 
 ;; When there's js-ts-mode, we also prefer it to js2-mode
 (sanityinc/remap-ts-mode 'js2-mode 'js-ts-mode 'javascript)
-(sanityinc/remap-ts-mode 'clojurescript-mode 'clojurescript-ts-mode 'clojure)
 
 ;; Default
 (setq treesit-font-lock-level 4)

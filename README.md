@@ -22,7 +22,6 @@ in the approximate order of how much I use them, from most to least:
 * Common Lisp (with Slime)
 * Python
 * Rust
-* Clojure (with Cider and nRepl)
 * PHP
 * Erlang
 
