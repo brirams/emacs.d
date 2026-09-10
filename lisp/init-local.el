@@ -21,6 +21,14 @@
 (global-set-key (kbd "M-j") 'windmove-left)
 (global-set-key (kbd "M-k") 'windmove-right)
 
+;; Free C-\ for herdr's prefix.  Emacs binds it to `toggle-input-method', which
+;; is a bad key to hit by accident: it changes what your keystrokes insert and
+;; the only hint is a mode-line indicator.  herdr is a terminal workspace
+;; manager running outside Emacs, so it takes the key first -- this is for the
+;; stray keystroke that leaks through, and for an Emacs started outside a herdr
+;; session.
+(global-unset-key (kbd "C-\\"))
+
 ;; jury's still out on whether this is a good idea
 (setq make-backup-files nil)
 (setq-default fill-column 100)
