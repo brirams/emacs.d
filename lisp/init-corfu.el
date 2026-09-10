@@ -19,6 +19,16 @@
   (with-eval-after-load 'eshell
     (add-hook 'eshell-mode-hook (lambda () (setq-local corfu-auto nil))))
   (setq-default corfu-quit-no-match 'separator)
+
+  ;; Keep what I typed unless I pick a candidate on purpose.  The defaults are
+  ;; `corfu-preselect' = valid and `corfu-preview-current' = insert: together
+  ;; they select the *first candidate* whenever the typed prefix is not itself a
+  ;; candidate, and write it into the buffer on further input.  So RET commits a
+  ;; word you never chose, which bites hardest in prose where every word is a
+  ;; prefix of something.  `prompt' selects your own input instead; M-n or the
+  ;; down arrow picks a real candidate.
+  (setq-default corfu-preselect 'prompt)
+  (setq-default corfu-preview-current nil)
   (add-hook 'after-init-hook 'global-corfu-mode)
 
 
