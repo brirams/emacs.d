@@ -41,6 +41,29 @@
 
 (add-hook 'after-init-hook 'session-initialize)
 
+;; Emacs 31 warns when it loads an .el file with no `lexical-binding' cookie,
+;; and .session has none.  It cannot get one: the session package rebuilds the
+;; file on every exit and writes the header from a hardcoded format string that
+;; only interpolates `session-save-file-coding-system' (session.el, "create
+;; header of session file"), with no hook to extend.  The file is pure data --
+;; `setq-default' forms for kill-ring and history variables -- so the cookie
+;; would mean nothing for it anyway.
+;;
+;; Suppress at the log level, not the display level.  `warning-suppress-types'
+;; only stops the popup; the text still lands in *Warnings*, and that buffer
+;; living on in the daemon is what reappears on each client attach.
+;; `warning-suppress-log-types' ignores the warning outright, so the buffer
+;; never gets the text.  Scoped to this one file, so a missing cookie anywhere
+;; else still gets reported.
+;;
+;; `require' rather than `with-eval-after-load': warnings.el may not load until
+;; the first warning is displayed, which is this one, and the after-load hook
+;; would then run too late.
+(require 'warnings)
+(add-to-list 'warning-suppress-log-types
+             (list 'files 'missing-lexbind-cookie
+                   (abbreviate-file-name session-save-file)))
+
 ;; save a bunch of variables to the desktop file
 ;; for lists specify the len of the maximal saved data also
 (setq desktop-globals-to-save
