@@ -125,6 +125,7 @@
 (require 'init-graphql)
 (require 'init-bazel)
 (require 'init-kotlin)
+(require 'init-thrift)
 (maybe-require-package 'nginx-mode)
 (maybe-require-package 'just-mode)
 (maybe-require-package 'justl)
