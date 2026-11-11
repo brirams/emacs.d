@@ -433,7 +433,11 @@ omitting the \" W%02d\" that upstream appends on Mondays."
            ((agenda "" nil)
             (tags "INBOX"
                   ((org-agenda-overriding-header "Inbox")
-                   (org-tags-match-list-sublevels nil)))
+                   (org-tags-match-list-sublevels nil)
+                   ;; Finished items still carry the INBOX filetag; hide them
+                   ;; here but leave them in the weekly review to be cleared.
+                   (org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'todo 'done))))
             (tags-todo "-INBOX"
                        ((org-agenda-overriding-header "Next Actions")
                         (org-agenda-tags-todo-honor-ignore-options t)
