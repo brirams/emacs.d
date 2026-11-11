@@ -124,6 +124,35 @@ typical word processor."
                                       completion-at-point-functions))))))
 
 (setq org-support-shift-select t)
+
+(defun bramos/org--item-prose-column ()
+  "Return the bullet column of the list item whose prose holds point.
+Return nil outside item paragraphs, on blank lines, and before the
+item's text (e.g. on the bullet itself)."
+  (let ((context (org-element-at-point)))
+    (when-let* (((eq (org-element-type context) 'paragraph))
+                ((not (org-match-line "[ \t]*$")))
+                ((>= (point) (org-element-contents-begin context)))
+                (item (org-in-item-p)))
+      (save-excursion
+        (goto-char item)
+        (current-indentation)))))
+
+(defun bramos/org-return ()
+  "Like `org-return', but new list prose lines up with the item's bullet."
+  (interactive)
+  (let ((column (bramos/org--item-prose-column))
+        (buffer (current-buffer))
+        (tick (buffer-chars-modified-tick)))
+    (call-interactively #'org-return)
+    ;; Following a link (with `org-return-follows-link') inserts nothing.
+    (when (and column
+               (eq buffer (current-buffer))
+               (/= tick (buffer-chars-modified-tick)))
+      (indent-line-to column))))
+
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "RET") #'bramos/org-return))
 
 ;;; Capturing
 
